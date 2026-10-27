@@ -6,7 +6,7 @@ Status: initial reference implementation. This is the proposed shared wire contr
 
 Versioned successful endpoints return JSON shaped like:
 
-\`\`\`json
+```json
 {
   "data": {
     "message": "Olá do TITAN!",
@@ -16,20 +16,20 @@ Versioned successful endpoints return JSON shaped like:
     "api_version": "v1"
   }
 }
-\`\`\`
+```
 
 Rules:
-- Route-specific payload belongs inside \`data\`.
-- \`meta.api_version\` is \`v1\`.
+- Route-specific payload belongs inside `data`.
+- `meta.api_version` is `v1`.
 - JSON field names use snake_case.
-- Content type is \`application/json\`.
+- Content type is `application/json`.
 - Additive response fields are preferred.
 
 ## Versioned error envelope
 
-The route-level error contract for paths under \`/api/v1\` is:
+The route-level error contract for paths under `/api/v1` is:
 
-\`\`\`json
+```json
 {
   "error": {
     "code": "not_found",
@@ -39,23 +39,23 @@ The route-level error contract for paths under \`/api/v1\` is:
     "api_version": "v1"
   }
 }
-\`\`\`
+```
 
-\`error.code\` is stable for programmatic handling. \`error.message\` must remain safe for display and must not contain stack traces, SQL, secrets or internal diagnostics. HTTP status remains authoritative.
+`error.code` is stable for programmatic handling. `error.message` must remain safe for display and must not contain stack traces, SQL, secrets or internal diagnostics. HTTP status remains authoritative.
 
-At this stage, the \`/api/v1\` router uses this envelope for route-level 404 and 405 responses. Outer middleware failures such as timeouts still use the legacy error shape; clients must tolerate missing \`meta.api_version\` until middleware-aware versioning is implemented. Existing unversioned routes are not changed.
+At this stage, the `/api/v1` router uses this envelope for route-level 404 and 405 responses. Outer middleware failures such as timeouts still use the legacy error shape; clients must tolerate missing `meta.api_version` until middleware-aware versioning is implemented. Existing unversioned routes are not changed.
 
 ## Implemented endpoints in this branch
 
-- \`GET /api/v1/hello\` — expected \`200 OK\`, with \`data.message\`, \`data.environment\` and \`meta.api_version\`.
-- Unknown paths beneath \`/api/v1\` return a versioned \`404\`.
-- Unsupported methods on a known \`/api/v1\` path return a versioned \`405\`.
+- `GET /api/v1/hello` — expected `200 OK`, with `data.message`, `data.environment` and `meta.api_version`.
+- Unknown paths beneath `/api/v1` return a versioned `404`.
+- Unsupported methods on a known `/api/v1` path return a versioned `405`.
 
-The hello endpoint is a contract smoke test, not a production health/readiness check. Existing \`/health\`, \`/api/hello\` and \`/api/greetings\` routes retain their current wire formats.
+The hello endpoint is a contract smoke test, not a production health/readiness check. Existing `/health`, `/api/hello` and `/api/greetings` routes retain their current wire formats.
 
 ## Request IDs
 
-The middleware emits/preserves \`x-request-id\` and exposes it to browser clients when explicit CORS origins are configured. Use it for diagnostics; do not log secrets or sensitive payloads.
+The middleware emits/preserves `x-request-id` and exposes it to browser clients when explicit CORS origins are configured. Use it for diagnostics; do not log secrets or sensitive payloads.
 
 ## Security and compatibility
 
