@@ -3,9 +3,11 @@
 //! `app` devolve um `Router` pronto, o que permite testar as rotas sem abrir uma porta real.
 
 pub mod api;
+pub mod contract;
 pub mod error;
 pub mod middleware;
 
+pub use contract::{ApiEnvelope, ApiMeta};
 pub use error::ApiError;
 
 use axum::Router;
