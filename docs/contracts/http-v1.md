@@ -45,4 +45,4 @@ Error bodies are not yet unified with AETHER. Existing `ApiError` bodies use `er
 
 ## Verification status
 
-A dedicated HTTP integration test is added for the versioned endpoint. This document does not assert that the test has been run or passed; CI/local execution must verify it.
+The endpoint uses the local typed `ApiEnvelope<T>` and `ApiMeta` response types. A dedicated HTTP integration test is added for the versioned endpoint. This document does not assert that the test has been run or passed; CI/local execution must verify it.
