@@ -221,6 +221,29 @@ async fn cors_is_disabled_by_default() {
 }
 
 #[tokio::test]
+async fn cors_exposes_request_id_to_browser_clients() {
+    let config = ServerConfig {
+        cors_allowed_origins: vec!["https://app.exemplo.com".to_string()],
+        ..ServerConfig::default()
+    };
+    let request = Request::get("/api/v1/hello")
+        .header(header::ORIGIN, "https://app.exemplo.com")
+        .body(Body::empty())
+        .unwrap();
+
+    let response = send(app(&config).unwrap(), request).await;
+    assert_eq!(
+        response.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN],
+        "https://app.exemplo.com"
+    );
+    let exposed = response.headers()[header::ACCESS_CONTROL_EXPOSE_HEADERS]
+        .to_str()
+        .unwrap()
+        .to_ascii_lowercase();
+    assert!(exposed.split(',').any(|value| value.trim() == "x-request-id"));
+}
+
+#[tokio::test]
 async fn cors_allows_only_configured_origins() {
     let config = ServerConfig {
         cors_allowed_origins: vec!["https://app.exemplo.com".to_string()],
