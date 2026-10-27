@@ -240,7 +240,9 @@ async fn cors_exposes_request_id_to_browser_clients() {
         .to_str()
         .unwrap()
         .to_ascii_lowercase();
-    assert!(exposed.split(',').any(|value| value.trim() == "x-request-id"));
+    assert!(exposed
+        .split(',')
+        .any(|value| value.trim() == "x-request-id"));
 }
 
 #[tokio::test]
