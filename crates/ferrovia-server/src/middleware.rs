@@ -1,11 +1,14 @@
 //! Pilha de middleware padrão: request ID, tracing, timeout, limite de body e CORS opcional.
 
+use std::time::Duration;
+
 use axum::{
     body::Body,
-    error_handling::HandleErrorLayer,
-    extract::DefaultBodyLimit,
+    extract::{DefaultBodyLimit, State},
     http::{header, HeaderName, HeaderValue, Method, Request},
-    BoxError, Router,
+    middleware::{from_fn_with_state, Next},
+    response::{IntoResponse, Response},
+    Router,
 };
 use ferrovia_core::{ConfigError, ServerConfig};
 use tower::ServiceBuilder;
@@ -23,6 +26,11 @@ pub const REQUEST_ID_HEADER: HeaderName = HeaderName::from_static("x-request-id"
 /// Aplica a pilha padrão a um router. Use com rotas próprias para herdar os mesmos limites.
 pub fn apply(router: Router, config: &ServerConfig) -> Result<Router, ConfigError> {
     let router = router.layer(DefaultBodyLimit::max(config.body_limit_bytes));
+
+    // O timeout precisa ficar dentro de CORS, para respostas de timeout também
+    // receberem os cabeçalhos CORS e poderem ser lidas pelo navegador.
+    let router = router.layer(from_fn_with_state(config.request_timeout, timeout_request));
+
     let router = match cors_layer(&config.cors_allowed_origins)? {
         Some(cors) => router.layer(cors),
         None => router,
@@ -47,18 +55,30 @@ pub fn apply(router: Router, config: &ServerConfig) -> Result<Router, ConfigErro
         ServiceBuilder::new()
             .layer(SetRequestIdLayer::new(REQUEST_ID_HEADER, MakeRequestUuid))
             .layer(trace)
-            .layer(PropagateRequestIdLayer::new(REQUEST_ID_HEADER))
-            .layer(HandleErrorLayer::new(handle_middleware_error))
-            .timeout(config.request_timeout),
+            .layer(PropagateRequestIdLayer::new(REQUEST_ID_HEADER)),
     ))
 }
 
-async fn handle_middleware_error(error: BoxError) -> ApiError {
-    if error.is::<tower::timeout::error::Elapsed>() {
-        ApiError::timeout()
-    } else {
-        tracing::error!(%error, "falha no middleware");
-        ApiError::internal()
+/// Applies the configured timeout and preserves the versioned error contract.
+async fn timeout_request(
+    State(timeout): State<Duration>,
+    request: Request<Body>,
+    next: Next,
+) -> Response {
+    let path = request.uri().path();
+    let is_v1 = path == "/api/v1" || path.starts_with("/api/v1/");
+
+    match tokio::time::timeout(timeout, next.run(request)).await {
+        Ok(response) => response,
+        Err(_) => {
+            tracing::warn!(timeout_ms = timeout.as_millis(), "HTTP request timed out");
+            let error = ApiError::timeout();
+            if is_v1 {
+                error.into_v1_response()
+            } else {
+                error.into_response()
+            }
+        }
     }
 }
 
