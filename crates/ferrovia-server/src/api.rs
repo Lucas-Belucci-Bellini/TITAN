@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 
 use crate::{ApiEnvelope, ApiError, AppState};
 
-/// Tamanho máximo de \`name\` em \`POST /api/greetings\`, em caracteres.
+/// Tamanho máximo de `name` em `POST /api/greetings`, em caracteres.
 pub const MAX_NAME_CHARS: usize = 64;
 
 /// Extrator JSON que devolve erros no formato padrão em vez do texto puro do Axum.
