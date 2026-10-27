@@ -8,10 +8,10 @@ use serde_json::json;
 
 use crate::ApiErrorEnvelope;
 
-/// HTTP error with a stable body: \`{"error":{"code":"...","message":"..."}}\`.
+/// HTTP error with a stable body: `{"error":{"code":"...","message":"..."}}`.
 ///
-/// \`code\` is intended for programmatic handling; \`message\` is display text.
-/// Never include stack traces, SQL or internal diagnostics in \`message\`.
+/// `code` is intended for programmatic handling; `message` is display text.
+/// Never include stack traces, SQL or internal diagnostics in `message`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApiError {
     status: StatusCode,
