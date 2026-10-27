@@ -43,7 +43,7 @@ The route-level error contract for paths under `/api/v1` is:
 
 `error.code` is stable for programmatic handling. `error.message` must remain safe for display and must not contain stack traces, SQL, secrets or internal diagnostics. HTTP status remains authoritative.
 
-At this stage, the `/api/v1` router uses this envelope for route-level 404 and 405 responses. Outer middleware failures such as timeouts still use the legacy error shape; clients must tolerate missing `meta.api_version` until middleware-aware versioning is implemented. Existing unversioned routes are not changed.
+The `/api/v1` router uses this envelope for route-level 404 and 405 responses and for request timeouts. The timeout middleware returns a versioned `408` response for paths under `/api/v1`; unversioned paths retain their existing legacy error shape. The timeout test also checks that CORS headers and `x-request-id` remain visible to an allowed browser origin.
 
 ## Implemented endpoints in this branch
 
@@ -67,4 +67,4 @@ The middleware emits/preserves `x-request-id` and exposes it to browser clients 
 
 ## Verification status
 
-The dedicated contract test covers the success envelope and the versioned route-level 404/405 envelopes. CI should verify the current changes before they are treated as passing.
+The dedicated contract tests cover the success envelope, versioned route-level 404/405 responses, versioned timeout responses, and browser-visible request-ID headers. CI must verify each commit before it is considered validated.
