@@ -7,7 +7,7 @@ use ferrovia_core::AppEvent;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::{ApiError, AppState};
+use crate::{ApiEnvelope, ApiError, AppState};
 
 /// Tamanho máximo de `name` em `POST /api/greetings`, em caracteres.
 pub const MAX_NAME_CHARS: usize = 64;
@@ -46,15 +46,16 @@ async fn hello(State(state): State<AppState>) -> Json<Value> {
 }
 
 /// Endpoint de referência para o contrato HTTP/JSON v1 da família AETHER/ATLAS/TITAN.
-async fn hello_v1(State(state): State<AppState>) -> Json<Value> {
-    Json(json!({
-        "data": {
-            "message": "Olá do TITAN!",
-            "environment": state.environment,
-        },
-        "meta": {
-            "api_version": "v1",
-        }
+#[derive(Debug, Serialize)]
+struct HelloV1Data {
+    message: &'static str,
+    environment: String,
+}
+
+async fn hello_v1(State(state): State<AppState>) -> Json<ApiEnvelope<HelloV1Data>> {
+    Json(ApiEnvelope::v1(HelloV1Data {
+        message: "Olá do TITAN!",
+        environment: state.environment,
     }))
 }
 
