@@ -76,6 +76,7 @@ curl -X POST http://127.0.0.1:3000/api/greetings -H "content-type: application/j
 | --- | --- |
 | `GET /health` | `{"status":"ok","service":"ferrovia"}` |
 | `GET /api/hello` | `{"message":"Olá da Ferrovia!","environment":"development"}` |
+| `GET /api/v1/hello` | Versioned success envelope containing `data.message`, `data.environment` and `meta.api_version = "v1"`; shared ATLAS/AETHER contract smoke endpoint. |
 | `POST /api/greetings` | `{"message":"Olá, Lucas!"}` — `name` é obrigatório, de 1 a 64 caracteres, sem caracteres de controle; campos extras são recusados. |
 
 ## Formato de erro
