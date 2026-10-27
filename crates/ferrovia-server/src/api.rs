@@ -21,6 +21,7 @@ pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/api/hello", get(hello))
+        .route("/api/v1/hello", get(hello_v1))
         .route("/api/greetings", post(create_greeting))
         .fallback(|| async { ApiError::not_found() })
         .method_not_allowed_fallback(|| async { ApiError::method_not_allowed() })
@@ -41,6 +42,19 @@ async fn hello(State(state): State<AppState>) -> Json<Value> {
     Json(json!({
         "message": "Olá da Ferrovia!",
         "environment": state.environment,
+    }))
+}
+
+/// Endpoint de referência para o contrato HTTP/JSON v1 da família AETHER/ATLAS/TITAN.
+async fn hello_v1(State(state): State<AppState>) -> Json<Value> {
+    Json(json!({
+        "data": {
+            "message": "Olá do TITAN!",
+            "environment": state.environment,
+        },
+        "meta": {
+            "api_version": "v1",
+        }
     }))
 }
 
