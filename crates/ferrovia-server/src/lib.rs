@@ -7,7 +7,7 @@ pub mod contract;
 pub mod error;
 pub mod middleware;
 
-pub use contract::{ApiEnvelope, ApiMeta};
+pub use contract::{ApiEnvelope, ApiErrorBody, ApiErrorEnvelope, ApiMeta};
 pub use error::ApiError;
 
 use axum::Router;
