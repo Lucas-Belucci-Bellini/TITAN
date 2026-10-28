@@ -1,4 +1,4 @@
-use ferrovia_core::ServerConfig;
+use ferrovia_core::TitanServerConfig;
 use tokio::net::TcpListener;
 use tracing_subscriber::EnvFilter;
 
@@ -10,13 +10,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
 
-    let config = ServerConfig::from_env()?;
+    let config = TitanServerConfig::from_env()?;
     let app = ferrovia_server::app(&config)?;
     let listener = TcpListener::bind(config.bind_address()).await?;
     tracing::info!(
         address = %listener.local_addr()?,
         environment = %config.environment,
-        "Ferrovia iniciada"
+        "TITAN iniciado"
     );
 
     axum::serve(listener, app)
