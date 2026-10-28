@@ -1,6 +1,6 @@
-//! Ferrovia HTTP server: routes, middleware and shared state.
-//! Ferrovia-prefixed aliases are recommended for new integrations; short
-//! existing names remain available for compatibility.
+//! Titan HTTP server: routes, middleware and shared state.
+//! Titan-prefixed names are the official API; Ferrovia-prefixed aliases remain
+//! available for compatibility with earlier releases.
 
 pub mod api;
 pub mod contract;
@@ -20,16 +20,23 @@ pub struct AppState {
     pub events: EventBus,
 }
 
-/// Framework-branded alias for AppState.
-pub type FerroviaAppState = AppState;
-/// Framework-branded alias for ApiEnvelope.
-pub type FerroviaApiEnvelope<T> = ApiEnvelope<T>;
-/// Framework-branded alias for ApiErrorEnvelope.
-pub type FerroviaApiErrorEnvelope = ApiErrorEnvelope;
-/// Framework-branded alias for ApiMeta.
-pub type FerroviaApiMeta = ApiMeta;
-/// Framework-branded alias for ApiError.
-pub type FerroviaApiError = ApiError;
+/// Official Titan name for AppState.
+pub type TitanAppState = AppState;
+/// Official Titan name for ApiEnvelope.
+pub type TitanApiEnvelope<T> = ApiEnvelope<T>;
+/// Official Titan name for ApiErrorEnvelope.
+pub type TitanApiErrorEnvelope = ApiErrorEnvelope;
+/// Official Titan name for ApiMeta.
+pub type TitanApiMeta = ApiMeta;
+/// Official Titan name for ApiError.
+pub type TitanApiError = ApiError;
+
+/// Compatibility aliases for the previous public branding.
+pub type FerroviaAppState = TitanAppState;
+pub type FerroviaApiEnvelope<T> = TitanApiEnvelope<T>;
+pub type FerroviaApiErrorEnvelope = TitanApiErrorEnvelope;
+pub type FerroviaApiMeta = TitanApiMeta;
+pub type FerroviaApiError = TitanApiError;
 
 impl AppState {
     pub fn new(config: &ServerConfig) -> Self {
