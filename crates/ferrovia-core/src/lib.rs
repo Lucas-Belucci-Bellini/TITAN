@@ -7,6 +7,8 @@ pub mod plugins;
 pub use config::{ConfigError, ServerConfig};
 /// Official Titan name for ServerConfig.
 pub type TitanServerConfig = ServerConfig;
+/// Official Titan name for configuration errors.
+pub type TitanConfigError = ConfigError;
 /// Compatibility alias for the previous public branding.
 pub type FerroviaServerConfig = TitanServerConfig;
 
@@ -20,6 +22,10 @@ pub type FerroviaEvent = TitanEvent;
 pub type FerroviaEventBus = TitanEventBus;
 
 pub use plugins::{Plugin, PluginError, PluginRegistry};
+/// Official Titan name for the plugin trait.
+pub use plugins::Plugin as TitanPlugin;
+/// Official Titan name for plugin registration errors.
+pub type TitanPluginError = PluginError;
 /// Official Titan name for PluginRegistry.
 pub type TitanPluginRegistry = PluginRegistry;
 /// Compatibility alias for the previous public branding.
