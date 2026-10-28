@@ -1,8 +1,10 @@
-# Ferrovia — framework de backend em Rust
+# TITAN — framework de backend em Rust
 
 > Versão `0.1.0`: **esqueleto funcional para APIs HTTP**, ainda não pronto para produção.
 
-Ferrovia é uma camada de framework para criar APIs e serviços em Rust, com roteamento, configuração, eventos e pontos de extensão para plugins. O nome junta *ferro* (de onde vem a ferrugem — *rust*) e *via* (rota). O motor HTTP é Axum sobre Tokio, com middleware do Tower, em vez de reimplementar protocolo HTTP e runtime assíncrono.
+TITAN é o framework de backend da família para criar APIs e serviços em Rust, com roteamento, configuração, eventos e pontos de extensão para plugins. O motor HTTP é Axum sobre Tokio, com middleware do Tower, em vez de reimplementar protocolo HTTP e runtime assíncrono.
+
+Os nomes oficiais da API pública incluem `TitanServerConfig`, `TitanEventBus`, `TitanPluginRegistry`, `TitanAppState` e os tipos `TitanApi*`. Os nomes genéricos e aliases Ferrovia continuam disponíveis por compatibilidade. Os pacotes `ferrovia-*` e variáveis `FERROVIA_*` não são renomeados nesta etapa.
 
 ## Objetivos
 
@@ -95,9 +97,9 @@ Todo erro devolvido pelo framework tem o mesmo formato:
 
 ```rust
 use axum::{routing::get, Router};
-use ferrovia_core::ServerConfig;
+use ferrovia_core::TitanServerConfig;
 
-let config = ServerConfig::from_env()?;
+let config = TitanServerConfig::from_env()?;
 let rotas = Router::new().route("/ping", get(|| async { "pong" }));
 let app = ferrovia_server::middleware::apply(rotas, &config)?;
 ```
@@ -108,7 +110,7 @@ let app = ferrovia_server::middleware::apply(rotas, &config)?;
 crates/
   ferrovia-core/          # configuração, eventos e contratos de plugin (sem HTTP)
   ferrovia-server/
-    src/lib.rs            # app(), AppState
+    src/lib.rs            # app(), TitanAppState (alias compatível de AppState)
     src/api.rs            # rotas, DTOs e ApiJson
     src/error.rs          # ApiError e formato de erro
     src/middleware.rs     # request ID, tracing, timeout, body limit, CORS
