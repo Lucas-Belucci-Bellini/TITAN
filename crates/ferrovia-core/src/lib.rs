@@ -21,9 +21,9 @@ pub type TitanEventBus = EventBus;
 pub type FerroviaEvent = TitanEvent;
 pub type FerroviaEventBus = TitanEventBus;
 
-pub use plugins::{Plugin, PluginError, PluginRegistry};
 /// Official Titan name for the plugin trait.
 pub use plugins::Plugin as TitanPlugin;
+pub use plugins::{Plugin, PluginError, PluginRegistry};
 /// Official Titan name for plugin registration errors.
 pub type TitanPluginError = PluginError;
 /// Official Titan name for PluginRegistry.
