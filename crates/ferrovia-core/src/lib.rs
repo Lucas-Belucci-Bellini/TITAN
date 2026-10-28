@@ -1,19 +1,26 @@
-//! Transport-independent building blocks for Ferrovia applications.
+//! Transport-independent building blocks for Titan applications.
 
 pub mod config;
 pub mod events;
 pub mod plugins;
 
 pub use config::{ConfigError, ServerConfig};
-/// Framework-branded alias for ServerConfig.
-pub type FerroviaServerConfig = ServerConfig;
+/// Official Titan name for ServerConfig.
+pub type TitanServerConfig = ServerConfig;
+/// Compatibility alias for the previous public branding.
+pub type FerroviaServerConfig = TitanServerConfig;
 
 pub use events::{AppEvent, EventBus};
-/// Framework-branded alias for AppEvent.
-pub type FerroviaEvent = AppEvent;
-/// Framework-branded alias for EventBus.
-pub type FerroviaEventBus = EventBus;
+/// Official Titan name for AppEvent.
+pub type TitanEvent = AppEvent;
+/// Official Titan name for EventBus.
+pub type TitanEventBus = EventBus;
+/// Compatibility aliases for the previous public branding.
+pub type FerroviaEvent = TitanEvent;
+pub type FerroviaEventBus = TitanEventBus;
 
 pub use plugins::{Plugin, PluginError, PluginRegistry};
-/// Framework-branded alias for PluginRegistry.
-pub type FerroviaPluginRegistry = PluginRegistry;
+/// Official Titan name for PluginRegistry.
+pub type TitanPluginRegistry = PluginRegistry;
+/// Compatibility alias for the previous public branding.
+pub type FerroviaPluginRegistry = TitanPluginRegistry;
