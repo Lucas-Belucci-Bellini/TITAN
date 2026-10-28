@@ -1,6 +1,6 @@
-//! Servidor HTTP da Ferrovia: monta rotas, middlewares e o estado compartilhado.
-//!
-//! `app` devolve um `Router` pronto, o que permite testar as rotas sem abrir uma porta real.
+//! Ferrovia HTTP server: routes, middleware and shared state.
+//! Ferrovia-prefixed aliases are recommended for new integrations; short
+//! existing names remain available for compatibility.
 
 pub mod api;
 pub mod contract;
@@ -13,12 +13,23 @@ pub use error::ApiError;
 use axum::Router;
 use ferrovia_core::{ConfigError, EventBus, ServerConfig};
 
-/// Estado injetado nos handlers. Não guarde segredos aqui sem necessidade.
+/// State injected into handlers.
 #[derive(Clone)]
 pub struct AppState {
     pub environment: String,
     pub events: EventBus,
 }
+
+/// Framework-branded alias for AppState.
+pub type FerroviaAppState = AppState;
+/// Framework-branded alias for ApiEnvelope.
+pub type FerroviaApiEnvelope<T> = ApiEnvelope<T>;
+/// Framework-branded alias for ApiErrorEnvelope.
+pub type FerroviaApiErrorEnvelope = ApiErrorEnvelope;
+/// Framework-branded alias for ApiMeta.
+pub type FerroviaApiMeta = ApiMeta;
+/// Framework-branded alias for ApiError.
+pub type FerroviaApiError = ApiError;
 
 impl AppState {
     pub fn new(config: &ServerConfig) -> Self {
@@ -29,7 +40,7 @@ impl AppState {
     }
 }
 
-/// Monta a aplicação completa: rotas de exemplo mais a pilha de middleware padrão.
+/// Builds the full application router and applies the default middleware stack.
 pub fn app(config: &ServerConfig) -> Result<Router, ConfigError> {
     middleware::apply(api::router(AppState::new(config)), config)
 }
