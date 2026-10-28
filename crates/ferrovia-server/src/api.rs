@@ -7,7 +7,7 @@ use ferrovia_core::AppEvent;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::{ApiError, AppState};
+use crate::{ApiEnvelope, ApiError, AppState};
 
 /// Tamanho máximo de `name` em `POST /api/greetings`, em caracteres.
 pub const MAX_NAME_CHARS: usize = 64;
@@ -18,9 +18,17 @@ pub const MAX_NAME_CHARS: usize = 64;
 pub struct ApiJson<T>(pub T);
 
 pub fn router(state: AppState) -> Router {
+    let v1 = Router::new()
+        .route("/hello", get(hello_v1))
+        .fallback(|| async { ApiError::not_found().into_v1_response() })
+        .method_not_allowed_fallback(|| async {
+            ApiError::method_not_allowed().into_v1_response()
+        });
+
     Router::new()
         .route("/health", get(health))
         .route("/api/hello", get(hello))
+        .nest("/api/v1", v1)
         .route("/api/greetings", post(create_greeting))
         .fallback(|| async { ApiError::not_found() })
         .method_not_allowed_fallback(|| async { ApiError::method_not_allowed() })
@@ -41,6 +49,20 @@ async fn hello(State(state): State<AppState>) -> Json<Value> {
     Json(json!({
         "message": "Olá da Ferrovia!",
         "environment": state.environment,
+    }))
+}
+
+/// Endpoint de referência para o contrato HTTP/JSON v1 da família AETHER/ATLAS/TITAN.
+#[derive(Debug, Serialize)]
+struct HelloV1Data {
+    message: &'static str,
+    environment: String,
+}
+
+async fn hello_v1(State(state): State<AppState>) -> Json<ApiEnvelope<HelloV1Data>> {
+    Json(ApiEnvelope::v1(HelloV1Data {
+        message: "Olá do TITAN!",
+        environment: state.environment,
     }))
 }
 

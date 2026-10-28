@@ -208,6 +208,46 @@ async fn slow_handler_times_out_with_json_408() {
 }
 
 #[tokio::test]
+async fn versioned_timeout_uses_v1_envelope_and_preserves_browser_headers() {
+    let config = ServerConfig {
+        request_timeout: Duration::from_millis(50),
+        cors_allowed_origins: vec!["http://localhost:8000".to_string()],
+        ..ServerConfig::default()
+    };
+    let slow = Router::new().route(
+        "/api/v1/slow",
+        get(|| async {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            "tarde demais"
+        }),
+    );
+    let request = Request::get("/api/v1/slow")
+        .header(header::ORIGIN, "http://localhost:8000")
+        .body(Body::empty())
+        .unwrap();
+
+    let response = send(middleware::apply(slow, &config).unwrap(), request).await;
+    assert_eq!(response.status(), StatusCode::REQUEST_TIMEOUT);
+    assert_json_content_type(&response);
+    assert!(response.headers().contains_key("x-request-id"));
+    assert_eq!(
+        response.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN],
+        "http://localhost:8000"
+    );
+    assert!(response.headers()[header::ACCESS_CONTROL_EXPOSE_HEADERS]
+        .to_str()
+        .unwrap()
+        .to_ascii_lowercase()
+        .split(',')
+        .any(|value| value.trim() == "x-request-id"));
+
+    let body = json_body(response).await;
+    assert_eq!(body["error"]["code"], "request_timeout", "{body}");
+    assert_eq!(body["meta"]["api_version"], "v1", "{body}");
+    assert!(body["error"]["message"].is_string(), "{body}");
+}
+
+#[tokio::test]
 async fn cors_is_disabled_by_default() {
     let request = Request::get("/health")
         .header(header::ORIGIN, "https://qualquer.exemplo.com")
@@ -218,6 +258,31 @@ async fn cors_is_disabled_by_default() {
         .headers()
         .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
         .is_none());
+}
+
+#[tokio::test]
+async fn cors_exposes_request_id_to_browser_clients() {
+    let config = ServerConfig {
+        cors_allowed_origins: vec!["https://app.exemplo.com".to_string()],
+        ..ServerConfig::default()
+    };
+    let request = Request::get("/api/v1/hello")
+        .header(header::ORIGIN, "https://app.exemplo.com")
+        .body(Body::empty())
+        .unwrap();
+
+    let response = send(app(&config).unwrap(), request).await;
+    assert_eq!(
+        response.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN],
+        "https://app.exemplo.com"
+    );
+    let exposed = response.headers()[header::ACCESS_CONTROL_EXPOSE_HEADERS]
+        .to_str()
+        .unwrap()
+        .to_ascii_lowercase();
+    assert!(exposed
+        .split(',')
+        .any(|value| value.trim() == "x-request-id"));
 }
 
 #[tokio::test]

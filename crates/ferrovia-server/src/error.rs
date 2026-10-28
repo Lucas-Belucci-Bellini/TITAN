@@ -6,10 +6,12 @@ use axum::{
 };
 use serde_json::json;
 
-/// Erro HTTP com corpo estável: `{"error": {"code": "...", "message": "..."}}`.
+use crate::ApiErrorEnvelope;
+
+/// HTTP error with a stable body: `{"error":{"code":"...","message":"..."}}`.
 ///
-/// `code` é um identificador fixo para clientes tratarem por programa; `message` é texto para pessoas.
-/// Nunca coloque stack traces, SQL ou detalhes internos em `message`.
+/// `code` is intended for programmatic handling; `message` is display text.
+/// Never include stack traces, SQL or internal diagnostics in `message`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApiError {
     status: StatusCode,
@@ -68,6 +70,16 @@ impl ApiError {
 
     pub fn code(&self) -> &'static str {
         self.code
+    }
+
+    /// Converts this error into the versioned family envelope.
+    ///
+    /// This is explicit rather than the default behavior so legacy routes keep
+    /// their existing wire format until a separate migration is approved.
+    pub fn into_v1_response(self) -> Response {
+        let status = self.status;
+        let body = ApiErrorEnvelope::v1(self.code, self.message);
+        (status, Json(body)).into_response()
     }
 }
 
