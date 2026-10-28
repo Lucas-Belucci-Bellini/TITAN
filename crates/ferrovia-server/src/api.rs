@@ -3,26 +3,26 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use ferrovia_core::AppEvent;
+use ferrovia_core::TitanEvent;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::{ApiEnvelope, ApiError, AppState};
+use crate::{TitanApiEnvelope, TitanApiError, TitanAppState};
 
 /// Tamanho máximo de `name` em `POST /api/greetings`, em caracteres.
 pub const MAX_NAME_CHARS: usize = 64;
 
 /// Extrator JSON que devolve erros no formato padrão em vez do texto puro do Axum.
 #[derive(FromRequest)]
-#[from_request(via(axum::Json), rejection(ApiError))]
+#[from_request(via(axum::Json), rejection(TitanApiError))]
 pub struct ApiJson<T>(pub T);
 
-pub fn router(state: AppState) -> Router {
+pub fn router(state: TitanAppState) -> Router {
     let v1 = Router::new()
         .route("/hello", get(hello_v1))
-        .fallback(|| async { ApiError::not_found().into_v1_response() })
+        .fallback(|| async { TitanApiError::not_found().into_v1_response() })
         .method_not_allowed_fallback(|| async {
-            ApiError::method_not_allowed().into_v1_response()
+            TitanApiError::method_not_allowed().into_v1_response()
         });
 
     Router::new()
@@ -30,8 +30,8 @@ pub fn router(state: AppState) -> Router {
         .route("/api/hello", get(hello))
         .nest("/api/v1", v1)
         .route("/api/greetings", post(create_greeting))
-        .fallback(|| async { ApiError::not_found() })
-        .method_not_allowed_fallback(|| async { ApiError::method_not_allowed() })
+        .fallback(|| async { TitanApiError::not_found() })
+        .method_not_allowed_fallback(|| async { TitanApiError::method_not_allowed() })
         .with_state(state)
 }
 
@@ -39,9 +39,9 @@ async fn health() -> Json<Value> {
     Json(json!({ "status": "ok", "service": "ferrovia" }))
 }
 
-async fn hello(State(state): State<AppState>) -> Json<Value> {
+async fn hello(State(state): State<TitanAppState>) -> Json<Value> {
     // O bus é demonstrativo. Sem assinantes, a publicação pode falhar; isso não impede a resposta HTTP.
-    let _ = state.events.publish(AppEvent {
+    let _ = state.events.publish(TitanEvent {
         topic: "http.hello.requested".to_string(),
         payload: json!({ "environment": state.environment }),
     });
@@ -59,8 +59,8 @@ struct HelloV1Data {
     environment: String,
 }
 
-async fn hello_v1(State(state): State<AppState>) -> Json<ApiEnvelope<HelloV1Data>> {
-    Json(ApiEnvelope::v1(HelloV1Data {
+async fn hello_v1(State(state): State<TitanAppState>) -> Json<TitanApiEnvelope<HelloV1Data>> {
+    Json(TitanApiEnvelope::v1(HelloV1Data {
         message: "Olá do TITAN!",
         environment: state.environment,
     }))
@@ -79,18 +79,18 @@ pub struct GreetingResponse {
 
 impl GreetingRequest {
     /// Devolve o nome normalizado ou um erro de validação legível.
-    fn validated_name(&self) -> Result<&str, ApiError> {
+    fn validated_name(&self) -> Result<&str, TitanApiError> {
         let name = self.name.trim();
         if name.is_empty() {
-            return Err(ApiError::validation("name não pode ser vazio"));
+            return Err(TitanApiError::validation("name não pode ser vazio"));
         }
         if name.chars().count() > MAX_NAME_CHARS {
-            return Err(ApiError::validation(format!(
+            return Err(TitanApiError::validation(format!(
                 "name deve ter no máximo {MAX_NAME_CHARS} caracteres"
             )));
         }
         if name.chars().any(char::is_control) {
-            return Err(ApiError::validation(
+            return Err(TitanApiError::validation(
                 "name não pode conter caracteres de controle",
             ));
         }
@@ -100,7 +100,7 @@ impl GreetingRequest {
 
 async fn create_greeting(
     ApiJson(request): ApiJson<GreetingRequest>,
-) -> Result<Json<GreetingResponse>, ApiError> {
+) -> Result<Json<GreetingResponse>, TitanApiError> {
     let name = request.validated_name()?;
     Ok(Json(GreetingResponse {
         message: format!("Olá, {name}!"),

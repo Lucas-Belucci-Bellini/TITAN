@@ -1,6 +1,6 @@
-//! Servidor HTTP da Ferrovia: monta rotas, middlewares e o estado compartilhado.
-//!
-//! `app` devolve um `Router` pronto, o que permite testar as rotas sem abrir uma porta real.
+//! Titan HTTP server: routes, middleware and shared state.
+//! Titan-prefixed names are the official API; Ferrovia-prefixed aliases remain
+//! available for compatibility with earlier releases.
 
 pub mod api;
 pub mod contract;
@@ -11,25 +11,46 @@ pub use contract::{ApiEnvelope, ApiErrorBody, ApiErrorEnvelope, ApiMeta};
 pub use error::ApiError;
 
 use axum::Router;
-use ferrovia_core::{ConfigError, EventBus, ServerConfig};
+use ferrovia_core::{TitanConfigError, TitanEventBus, TitanServerConfig};
 
-/// Estado injetado nos handlers. Não guarde segredos aqui sem necessidade.
+/// State injected into handlers.
 #[derive(Clone)]
 pub struct AppState {
     pub environment: String,
-    pub events: EventBus,
+    pub events: TitanEventBus,
 }
 
+/// Official Titan name for AppState.
+pub type TitanAppState = AppState;
+/// Official Titan name for ApiEnvelope.
+pub type TitanApiEnvelope<T> = ApiEnvelope<T>;
+/// Official Titan name for ApiErrorBody.
+pub type TitanApiErrorBody = ApiErrorBody;
+/// Official Titan name for ApiErrorEnvelope.
+pub type TitanApiErrorEnvelope = ApiErrorEnvelope;
+/// Official Titan name for ApiMeta.
+pub type TitanApiMeta = ApiMeta;
+/// Official Titan name for ApiError.
+pub type TitanApiError = ApiError;
+
+/// Compatibility aliases for the previous public branding.
+pub type FerroviaAppState = TitanAppState;
+pub type FerroviaApiEnvelope<T> = TitanApiEnvelope<T>;
+pub type FerroviaApiErrorBody = TitanApiErrorBody;
+pub type FerroviaApiErrorEnvelope = TitanApiErrorEnvelope;
+pub type FerroviaApiMeta = TitanApiMeta;
+pub type FerroviaApiError = TitanApiError;
+
 impl AppState {
-    pub fn new(config: &ServerConfig) -> Self {
+    pub fn new(config: &TitanServerConfig) -> Self {
         Self {
             environment: config.environment.clone(),
-            events: EventBus::new(64),
+            events: TitanEventBus::new(64),
         }
     }
 }
 
-/// Monta a aplicação completa: rotas de exemplo mais a pilha de middleware padrão.
-pub fn app(config: &ServerConfig) -> Result<Router, ConfigError> {
-    middleware::apply(api::router(AppState::new(config)), config)
+/// Builds the full application router and applies the default middleware stack.
+pub fn app(config: &TitanServerConfig) -> Result<Router, TitanConfigError> {
+    middleware::apply(api::router(TitanAppState::new(config)), config)
 }

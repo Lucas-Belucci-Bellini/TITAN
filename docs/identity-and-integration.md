@@ -8,7 +8,7 @@ Status: **proposed architecture decision for review** (2026-10). This document d
 - **ATLAS** — Rust frontend framework for browser interfaces compiled to WebAssembly (WASM).
 - **TITAN** — Rust backend HTTP framework for APIs and services.
 
-These are the public product/repository names for the family. This repository currently uses **Ferrovia** and the `ferrovia-*` Cargo crate namespace. Treat these as existing package/API identities during a compatibility transition. Do not rename packages, imports, environment variables or public symbols without a separate migration plan and explicit approval.
+These are the public product/repository names for the family. The `ferrovia-*` Cargo namespace and `FERROVIA_*` environment-variable prefix remain during a compatibility transition, while `TitanServerConfig`, `TitanEvent`, `TitanEventBus`, `TitanPluginRegistry`, `TitanAppState` and `TitanApi*` are the recommended public type names for new code. Generic names and older `Ferrovia*` aliases remain available for compatibility. Package/import and environment-variable renames are outside this API pass and require a separate migration plan.
 
 ## TITAN responsibility
 
@@ -41,8 +41,8 @@ AETHER is optional and can orchestrate broader application modules or workflows 
 
 - Product/repository brand: TITAN.
 - Current package namespace: `ferrovia-*` (observed in the workspace manifest).
-- Existing public Rust API remains unchanged until a separate approved migration.
-- A future rename must inventory imports, examples, docs, environment-variable prefixes (the README currently documents `FERROVIA_*`), Cargo metadata and downstream use. No rename is included in this proposal.
+- Public Rust API: additive `Titan*` aliases are the recommended names for new code; generic names and `Ferrovia*` aliases remain available.
+- A future Cargo package/crate or environment-variable rename must inventory imports, examples, docs, `FERROVIA_*` configuration, Cargo metadata and downstream use. Those renames are not part of this API change.
 
 ## Verification gates before production claims
 
