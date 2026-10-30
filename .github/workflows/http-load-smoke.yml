@@ -1,0 +1,62 @@
+name: TITAN HTTP load smoke
+
+on:
+  push:
+    branches: [main, "quality/**"]
+    paths:
+      - "crates/**"
+      - "scripts/http-load-smoke.py"
+      - ".github/workflows/http-load-smoke.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "scripts/http-load-smoke.py"
+      - ".github/workflows/http-load-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  http-load-smoke:
+    name: HTTP concurrency smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Start TITAN
+        env:
+          FERROVIA_HOST: 127.0.0.1
+          FERROVIA_PORT: "3900"
+          FERROVIA_ENV: ci
+        run: |
+          cargo run --locked -p ferrovia-server > /tmp/titan.log 2>&1 &
+          echo $! > /tmp/titan.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3900/api/v1/hello > /dev/null; then
+              exit 0
+            fi
+            if ! kill -0 "$(cat /tmp/titan.pid)" 2>/dev/null; then
+              cat /tmp/titan.log
+              exit 1
+            fi
+            sleep 1
+          done
+          cat /tmp/titan.log
+          exit 1
+      - name: Run concurrent HTTP smoke test
+        env:
+          TITAN_BASE_URL: http://127.0.0.1:3900
+          TITAN_LOAD_WORKERS: "4"
+          TITAN_LOAD_REQUESTS: "100"
+        run: python3 scripts/http-load-smoke.py
+      - name: Stop TITAN
+        if: always()
+        run: |
+          if [ -f /tmp/titan.pid ]; then
+            kill "$(cat /tmp/titan.pid)" 2>/dev/null || true
+          fi
