@@ -1,15 +1,35 @@
 # Escopo e status
 
-Este pacote entrega o planejamento, um core pequeno e uma API de demonstração com contratos HTTP básicos. Não é uma release 1.0 e não deve ser exposto à internet sem completar a revisão de segurança (RB-007).
+TITAN é um framework experimental `0.1.0` para APIs HTTP. Não é uma release 1.0 e não deve ser considerado pronto para exposição pública sem autenticação/autorização, rate limiting e revisão de segurança apropriados ao deployment.
 
-## Validado em 2026-10-25 (Rust 1.99, Windows)
+## Status verificado em 2026-10-30
 
-- `cargo fmt --all -- --check`: sem diferenças.
-- `cargo clippy --workspace --all-targets -- -D warnings`: sem avisos.
-- `cargo test --workspace`: 22 testes passando (7 no core, 15 de integração HTTP).
+- CI Rust: formatação, workspace check, testes e Clippy.
+- MSRV declarada `rust-version = "1.89"` verificada em workflow próprio.
+- Auditoria de dependências RustSec integrada ao CI.
+- Smoke test de processo em Linux: inicia o binário, aguarda o endpoint de saúde, envia SIGTERM e exige saída com código zero dentro do prazo e mensagem esperada de shutdown.
+- Testes de integração HTTP e contrato de sucesso versionado em `/api/v1/hello`.
+- Workflow de integração da família executa contrato HTTP contra o servidor TITAN.
 
-## Prioridade atual
+Os resultados devem ser conferidos pelo SHA da execução. O smoke test de shutdown é limitado ao cenário de processo descrito; não é teste de carga ou prova de resiliência de produção.
 
-1. RB-001: workflow de CI. Adiado enquanto a conta do GitHub está em revisão; os comandos já passam localmente.
-2. RB-005: plugins estáticos que registram rotas, com ciclo de vida `configure`/`start`/`shutdown`.
-3. RB-007: revisão de segurança de pré-produção (autenticação, rate limiting, threat model).
+## Implementado
+
+- Core e servidor separados.
+- Configuração validada, roteamento e middleware.
+- Envelope de erro JSON e validação de payload.
+- Event bus em memória e registro estático de plugins.
+- Encerramento gracioso por Ctrl+C e SIGTERM em Unix.
+
+## Ainda não implementado
+
+- Plugins que registram rotas/serviços com lifecycle completo.
+- Persistência, pool de conexões e migrations.
+- Autenticação/autorização e rate limiting.
+- Métricas Prometheus, OpenAPI e política de estabilidade 1.0.
+
+## Prioridades atuais
+
+1. Definir contrato de plugins com ciclo de vida e rollback.
+2. Concluir revisão de segurança antes de qualquer alegação de produção.
+3. Avaliar persistência e observabilidade conforme casos de uso reais.
