@@ -55,6 +55,11 @@ impl PluginRegistry {
         self.capabilities.contains(capability)
     }
 
+    /// Returns registered capabilities in deterministic lexicographic order.
+    pub fn capabilities(&self) -> impl Iterator<Item = &str> {
+        self.capabilities.iter().map(String::as_str)
+    }
+
     pub fn installed_plugins(&self) -> &[String] {
         &self.installed
     }
@@ -108,5 +113,19 @@ mod tests {
         assert!(registry.has_capability("existing:stable"));
         assert!(!registry.has_capability("partial:must-not-leak"));
         assert!(registry.installed_plugins().is_empty());
+    }
+
+    #[test]
+    fn capabilities_are_exposed_in_stable_sorted_order() {
+        let mut registry = PluginRegistry::new();
+        registry.add_capability("zeta");
+        registry.add_capability("alpha");
+        registry.add_capability("middle");
+        registry.add_capability("alpha");
+
+        assert_eq!(
+            registry.capabilities().collect::<Vec<_>>(),
+            ["alpha", "middle", "zeta"]
+        );
     }
 }
