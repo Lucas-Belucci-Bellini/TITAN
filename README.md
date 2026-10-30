@@ -23,7 +23,8 @@ Os nomes oficiais da API pública incluem `TitanServerConfig`, `TitanEventBus`, 
 - Event bus assíncrono baseado em `tokio::sync::broadcast`.
 - Registro estático de plugins, com detecção de nomes duplicados e capacidades.
 - Encerramento gracioso por Ctrl+C (e SIGTERM em Unix).
-- 22 testes: unidade no core e integração HTTP sem abrir porta real.
+- Testes unitários e de integração HTTP para o core, os contratos de API e o middleware.
+- Smoke test de processo para encerramento gracioso: o CI inicia o binário do servidor, aguarda o endpoint de saúde, envia SIGTERM e exige saída com código zero dentro do prazo, além da mensagem de shutdown esperada. Esse cenário é uma verificação de ciclo de vida em Linux, não um benchmark de carga nem uma garantia de resiliência em produção.
 - Plano de produto, arquitetura, roadmap e ADRs em `plans/`.
 
 ## O que ainda não existe
