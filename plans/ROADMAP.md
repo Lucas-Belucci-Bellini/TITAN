@@ -1,16 +1,18 @@
-# Roadmap — Ferrovia
+# Roadmap — TITAN (pacotes atuais: ferrovia-*)
 
-## Fase 0 — Fundação (agora)
+## Fase 0 — Fundação
 
 - [x] Workspace e divisão core/server.
 - [x] Configuração por ambiente e validação da porta.
 - [x] Event bus em memória.
 - [x] Registro estático de plugins.
-- [x] Rotas de exemplo, logging e Ctrl+C.
-- [x] Rodar `cargo test --workspace` e validar respostas HTTP em ambiente com Rust.
-- [ ] Adicionar CI (fmt, clippy, test). Os comandos já passam localmente; falta o pipeline (pausado enquanto a conta do GitHub está em revisão).
+- [x] Rotas de exemplo, logging e encerramento gracioso.
+- [x] Testes nativos e de integração HTTP.
+- [x] CI com formatação, check, testes e Clippy.
+- [x] Verificação da MSRV declarada (Rust 1.89).
+- [x] Auditoria automatizada de dependências.
 
-**Saída:** skeleton de API reproduzível.
+**Saída:** skeleton de API reproduzível em CI.
 
 ## Fase 1 — Contratos HTTP
 
@@ -19,8 +21,10 @@
 - [x] Testes de integração para status codes e formato das respostas.
 - [x] Middleware de request ID, timeout, limite de body e tracing.
 - [x] Política CORS opcional, com origens explícitas.
+- [x] Endpoint de sucesso versionado `/api/v1/hello` com envelope `meta.api_version`.
+- [x] Smoke test HTTP de contrato executado contra servidor TITAN real no workflow de integração da família.
 
-**Saída:** API robusta em ambiente de desenvolvimento.
+**Saída:** contrato HTTP demonstrável em ambiente de desenvolvimento.
 
 ## Fase 2 — Extensibilidade real
 
@@ -48,12 +52,14 @@
 - [ ] OpenAPI/documentação de endpoints.
 - [ ] Testes de carga e threat modeling.
 
-**Saída:** release candidata para aplicações de baixo risco, após revisão.
+**Saída:** release candidata somente após revisão de segurança e operacional.
 
 ## Fase 5 — Ferramentas e versão 1.0
 
 - [ ] CLI para criar módulos e serviços.
 - [ ] Política de compatibilidade semântica.
 - [ ] Guia de upgrade e exemplos de produção.
-- [ ] Auditoria de dependências e checklist operacional.
+- [ ] Checklist operacional e política de divulgação de vulnerabilidades.
 - [ ] Publicar `1.0` apenas após critérios de segurança, testes e estabilidade de API.
+
+**Limite atual:** o smoke test de SIGTERM comprova encerramento do processo em Linux sob o cenário testado; não substitui benchmarks, testes de carga ou revisão de prontidão para produção.
