@@ -1,0 +1,34 @@
+name: TITAN graceful shutdown smoke
+
+on:
+  push:
+    branches: [main, "quality/**"]
+    paths:
+      - "crates/**"
+      - "scripts/graceful-shutdown-smoke.py"
+      - ".github/workflows/graceful-shutdown-smoke.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "scripts/graceful-shutdown-smoke.py"
+      - ".github/workflows/graceful-shutdown-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sigterm-shutdown:
+    name: Process exits cleanly after SIGTERM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build TITAN server
+        run: cargo build --locked -p ferrovia-server
+      - name: Verify graceful process shutdown
+        run: python3 scripts/graceful-shutdown-smoke.py
