@@ -31,13 +31,19 @@ impl PluginRegistry {
         Self::default()
     }
 
+    /// Installs a plugin atomically: failed registration leaves the registry unchanged.
     pub fn install<P: Plugin>(&mut self, plugin: P) -> Result<(), PluginError> {
         let name = plugin.name();
         if self.installed.iter().any(|registered| registered == name) {
             return Err(PluginError(format!("plugin duplicado: {name}")));
         }
-        plugin.register(self)?;
-        self.installed.push(name.to_string());
+
+        // Plugins may add capabilities before returning an error. Stage those changes
+        // in a clone so a failed registration cannot leak partial state.
+        let mut candidate = self.clone();
+        plugin.register(&mut candidate)?;
+        candidate.installed.push(name.to_string());
+        *self = candidate;
         Ok(())
     }
 
@@ -69,6 +75,17 @@ mod tests {
         }
     }
 
+    struct FailingPlugin;
+    impl Plugin for FailingPlugin {
+        fn name(&self) -> &'static str {
+            "failing"
+        }
+        fn register(&self, registry: &mut PluginRegistry) -> Result<(), PluginError> {
+            registry.add_capability("partial:must-not-leak");
+            Err(PluginError("registration failed".to_owned()))
+        }
+    }
+
     #[test]
     fn registers_capabilities_and_rejects_duplicate_names() {
         let mut registry = PluginRegistry::new();
@@ -78,5 +95,18 @@ mod tests {
         assert!(registry.has_capability("content-type:application/json"));
         assert!(registry.install(JsonPlugin).is_err());
         assert_eq!(registry.installed_plugins(), &["json"]);
+    }
+
+    #[test]
+    fn failed_registration_rolls_back_all_registry_changes() {
+        let mut registry = PluginRegistry::new();
+        registry.add_capability("existing:stable");
+
+        let error = registry.install(FailingPlugin).unwrap_err();
+
+        assert_eq!(error.to_string(), "registration failed");
+        assert!(registry.has_capability("existing:stable"));
+        assert!(!registry.has_capability("partial:must-not-leak"));
+        assert!(registry.installed_plugins().is_empty());
     }
 }
